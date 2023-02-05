@@ -25,7 +25,8 @@
 
 ## Discord
 
-- in voice settings set `input device` to "CABLE Output (VB-Audio Virtual Cable)"
+- in `Voice & Video` settings set the `INPUT DEVICE` to "CABLE Output (VB-Audio Virtual Cable)"
+- enable the `Voice Activity`
 
 # RUN
 
