@@ -11,7 +11,7 @@ def main():
         device=Device.GPU,
         default_speaker=Speaker.baya,
         models_path='./models/',
-        download_model_if_not_exists=False,
+        download_model_if_not_exists=True,
     ))
 
     ttsm = TTSManager(tts, SimplePollingReader(), VBCableWriter())
