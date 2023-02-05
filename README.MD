@@ -21,3 +21,9 @@
 ## Windows OS
 
 - install [Virtual Audio Cable](https://vb-audio.com/Cable/)
+
+# RUN
+
+```python
+python main.py
+```
