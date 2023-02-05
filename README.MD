@@ -22,6 +22,11 @@
 
 - install [Virtual Audio Cable](https://vb-audio.com/Cable/)
 
+
+## Discord
+
+- in voice settings set `input device` to "CABLE Output (VB-Audio Virtual Cable)"
+
 # RUN
 
 ```python
