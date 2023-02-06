@@ -1,5 +1,5 @@
 from app.tts import TTS, Device, SimplePollingReader, Speaker, TTSConfig, TTSManager
-from app.vb_cable_writer import VBCableWriter
+from app.io.vb_cable_writer import VBCableWriter
 
 """
 Pytorch install: pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu117

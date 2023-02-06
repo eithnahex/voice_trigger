@@ -1,6 +1,6 @@
 from multiprocessing import Process
 from typing import Any
-from numpy import array
+from numpy import ndarray
 import pyaudio
 from torch import Tensor
 from app.tts import SampleRate, Writer
@@ -44,7 +44,7 @@ class VBCableWriter(Writer):
         return device_info
 
     @staticmethod
-    def _play(audio_wav: array, rate: SampleRate, device_index: int | None = None) -> None:
+    def _play(audio_wav: ndarray, rate: SampleRate, device_index: int | None = None) -> None:
         CHUNK = 1024
 
         channels = 1
