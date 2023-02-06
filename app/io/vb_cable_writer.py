@@ -1,33 +1,129 @@
 from multiprocessing import Process
+import multiprocessing
 from typing import Any
 from numpy import ndarray
+import numpy
 import pyaudio
 from torch import Tensor
-from app.tts import SampleRate, Writer
+
+from app.io.io import Writer
+from app.tts import SampleRate
 
 
 class VBCableWriter(Writer):
+    msg_ready = 'ready'
+    msg_close = 'close'
 
-    def __init__(self) -> None:
-        super().__init__()
+    def configure(self, sample_rate: SampleRate) -> None:
+        self.configured = True
         self.device_name = 'CABLE Input'
+        self.sample_rate = sample_rate
         self.device_info = self._get_device_info()
+        self.q_data = multiprocessing.Queue()
+        self.q_signals = multiprocessing.Queue()
+        self.processes: list[Process] = self._run_processes()
 
-    def write(self, audio: Tensor, sample_rate: SampleRate) -> Any:
-        
-        audio_wav = (audio * 32767).numpy().astype('int16')
+    def close(self) -> None:
+        if not self.configured:
+            raise Exception("call Writer#configure() first!")
 
-        p1 = Process(target=self._play, args=(audio_wav, sample_rate))
-        p2 = Process(target=self._play, args=(
-            audio_wav, sample_rate, self.device_info.get('index'))
+        print('writer closing...')
+
+        self.q_data.put(VBCableWriter.msg_close)
+
+        for p in self.processes:
+            if p.is_alive:
+                p.terminate()
+
+        for p in self.processes:
+            p.join()
+
+        print('writer closed')
+        pass
+
+    def write(self, audio: Tensor) -> Any:
+        if not self.configured:
+            raise Exception("call Writer#configure() first!")
+
+        audio_wav = self._tensor_to_wav_array(audio).tobytes()
+        self.q_data.put_nowait(audio_wav)
+        self.q_data.put_nowait(audio_wav)
+
+        pass
+
+    def _run_processes(self) -> list[Process]:
+        processes = [
+            Process(target=self._work, args=(
+                self.q_data,
+                self.q_signals,
+                self.sample_rate, None,
+                "default stream")
+            ),
+            Process(target=self._work, args=(
+                self.q_data,
+                self.q_signals,
+                self.sample_rate,
+                self.device_info.get('index'),
+                "vb_cable stream")
+            ),
+        ]
+
+        for p in processes:
+            p.start()
+
+        # wait for ready
+        for _ in processes:
+            msg = self.q_signals.get()
+            if msg == VBCableWriter.msg_ready:
+                continue
+            else:
+                raise Exception(
+                    f'Message error. Expected value: {VBCableWriter.msg_ready}. Iтcoming value: {msg}')
+
+        return processes
+
+    @staticmethod
+    def _work(
+        q_data: multiprocessing.Queue,
+        q_signals: multiprocessing.Queue,
+        sample_rate: SampleRate,
+        device_index: int | None = None,
+        process_name: str = 'process'
+    ):
+        print(f'{process_name}: configure...')
+        p = pyaudio.PyAudio()
+
+        CHUNK = 1024
+        channels = 1
+
+        stream = p.open(
+            format=pyaudio.paInt16,
+            channels=channels,
+            rate=sample_rate,
+            frames_per_buffer=CHUNK,
+            output=True,
+            output_device_index=device_index
         )
 
-        p1.start()
-        p2.start()
+        # send ready
+        q_signals.put(VBCableWriter.msg_ready)
 
-        p1.join()
-        p2.join()
+        print(f'{process_name}: ready')
+        while True:
+            if not q_signals.empty() and q_signals.get_nowait() == VBCableWriter.msg_close:
+                break
+
+            data = q_data.get()
+            stream.write(data)
+
+        stream.close()
+        p.terminate()
+        print(f'{process_name}: stopped')
         pass
+
+    @staticmethod
+    def _tensor_to_wav_array(tensor: Tensor) -> ndarray:
+        return (tensor * 32767).numpy().astype(numpy.int16)
 
     def _get_device_info(self) -> dict:
         p = pyaudio.PyAudio()
@@ -41,25 +137,6 @@ class VBCableWriter(Writer):
         if not device_info:
             raise Exception(f"No device found: {device_info}")
 
-        return device_info
-
-    @staticmethod
-    def _play(audio_wav: ndarray, rate: SampleRate, device_index: int | None = None) -> None:
-        CHUNK = 1024
-
-        channels = 1
-
-        p = pyaudio.PyAudio()
-
-        stream = p.open(
-            format=pyaudio.paInt16,
-            channels=channels,
-            rate=rate,
-            frames_per_buffer=CHUNK,
-            output=True,
-            output_device_index=device_index
-        )
-
-        stream.write(audio_wav.tostring())
-        stream.close()
         p.terminate()
+
+        return device_info
