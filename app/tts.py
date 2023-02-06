@@ -8,7 +8,7 @@ from pathlib import Path
 import time
 from typing import Any, Generator, TypeAlias
 import wave
-from numpy import array
+from numpy import ndarray
 
 from torch import Tensor
 import torch
@@ -112,7 +112,7 @@ class TTS():
         return audio
 
     @staticmethod
-    def tensor_to_wav_array(audio: Tensor) -> array:
+    def tensor_to_wav_array(audio: Tensor) -> ndarray:
         # pytorch Tensor -> numpy array
         return (audio * 32767).numpy().astype('int16')
 
