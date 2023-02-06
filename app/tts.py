@@ -1,20 +1,14 @@
-
 from abc import ABC, abstractmethod
-import contextlib
 from enum import Enum
 from os import PathLike
 import os
 from pathlib import Path
-import time
 from typing import Any, Generator, TypeAlias
-import wave
-from numpy import array
-
 from torch import Tensor
 import torch
 from torch.package.package_importer import PackageImporter
 
-from stubs.multi_acc_v3_package import TTSModelMultiAcc_v3
+from app.typing.multi_acc_v3_package import TTSModelMultiAcc_v3
 
 
 class Device(str, Enum):
@@ -39,29 +33,13 @@ Sample: TypeAlias = str
 SampleRate: TypeAlias = int
 
 
-class Reader(ABC):
-    @abstractmethod
-    def read(self) -> Generator[None, None, tuple[Sample, SampleRate, Speaker | None]]:
-        """
-        return: generator with tuple of sample str, sample_rate int, Speaker | None
-        """
-        pass
-    pass
-
-
-class Writer(ABC):
-    @abstractmethod
-    def write(self, audio: Tensor, sample_rate: SampleRate) -> Any:
-        pass
-    pass
-
-
 class TTSConfig():
 
     def __init__(
         self,
         device: Device,
         default_speaker: Speaker,
+        sample_rate: SampleRate = 48000,
         model_name: str = 'v3_1_ru.pt',
         models_path: PathLike = '.',
         download_model_if_not_exists: bool = True,
@@ -70,6 +48,7 @@ class TTSConfig():
         warmup: bool = True,
         _jit_stuck_fix: bool = True,
     ) -> None:
+        self.sample_rate = sample_rate
         self.device = torch.device(device)
         self.default_speaker = default_speaker
         self.model_name = model_name
@@ -102,22 +81,17 @@ class TTS():
         self.config = config
         pass
 
-    def do_tts(self, sample: str, sample_rate: int, speaker: Speaker | None = None) -> Tensor:
+    def do_tts(self, sample: str, speaker: Speaker | None = None) -> Tensor:
         speaker = speaker if speaker else self.config.default_speaker
         audio: Tensor = self.model.apply_tts(
             ssml_text=sample,
             speaker=speaker,
-            sample_rate=sample_rate,
+            sample_rate=self.config.sample_rate,
         )
         return audio
 
-    @staticmethod
-    def tensor_to_wav_array(audio: Tensor) -> array:
-        # pytorch Tensor -> numpy array
-        return (audio * 32767).numpy().astype('int16')
-
     def configure(self):
-        print('configure...')
+        print('tts configure...')
         if self.config._jit_stuck_fix:
             # fix torch stuck bug
             torch._C._jit_set_profiling_mode(False)
@@ -145,80 +119,8 @@ class TTS():
         return model
 
     def _warmup(self):
-        print('warmup...')
+        print('model warmup...')
         self.model.apply_tts('с', speaker=self.config.default_speaker)
         pass
 
-    pass
-
-
-class TTSManager():
-    def __init__(self, tts: TTS, inputer: Reader, outputer: Writer) -> None:
-        self.tts = tts
-        self.inputer = inputer
-        self.outputer = outputer
-        pass
-
-    def start(self):
-        self.tts.configure()
-
-        for (sample, rate, speaker) in self.inputer.read():
-            audio = self.tts.do_tts(
-                sample, rate, speaker
-            )
-            self.outputer.write(audio, rate)
-    pass
-
-
-class SimplePollingReader(Reader):
-    def read(self) -> Generator[None, None, tuple[str, SampleRate, Speaker | None]]:
-        speaker = Speaker.baya
-        sample_rate = 48000
-
-        print('Print exit or stop for exit')
-        while True:
-            print('Print text for tts:')
-            i = input().strip()
-
-            if i.startswith('exit') or i.startswith('stop'):
-                break
-
-            if i.startswith('speaker'):
-                input_speaker = i.removeprefix('speaker').strip()
-                if not Speaker.contains(input_speaker):
-                    print('Wrong speaker')
-                    continue
-                speaker = input_speaker
-                continue
-
-            sample = f"<speak>{i}</speak>"
-            yield sample, sample_rate, speaker
-            pass
-        print('exit')
-    pass
-
-
-class SimpleWavWriter(Writer):
-
-    def __init__(self, save_dir: PathLike = './polling_results/') -> None:
-        super().__init__()
-        self.save_dir = save_dir
-        self.__create_dir_if_not_exists(self.save_dir)
-
-    def write(self, audio: Tensor, sample_rate: SampleRate) -> Any:
-        audio_name = int(time.time() * 1000)
-        path = f'{self.save_dir}/{audio_name}.wav'
-
-        audio_wav = (audio * 32767).numpy().astype('int16')
-
-        with contextlib.closing(wave.open(path, 'wb')) as wf:
-            wf.setnchannels(1)
-            wf.setsampwidth(2)
-            wf.setframerate(sample_rate)
-            wf.writeframes(audio_wav)
-        pass
-
-    def __create_dir_if_not_exists(self, path: PathLike):
-        if not (p := Path(path)).exists():
-            p.mkdir()
     pass
