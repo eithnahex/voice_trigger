@@ -9,16 +9,31 @@ class TTSManager():
         self.outputer = outputer
         pass
 
-    def start(self):
+    def start(self) -> None:
         self.inputer.configure()
         self.outputer.configure(self.tts.config.sample_rate)
         self.tts.configure()
 
-        for (sample, speaker) in self.inputer.read():
-            audio = self.tts.do_tts(
-                sample, speaker
-            )
-            self.outputer.write(audio)
+        try:
+            for sample, speaker in self.inputer.read():
+                try:
+                    audio = self.tts.do_tts(
+                        sample, speaker
+                    )
+                except ValueError as e:
+                    print('Wrong ssml syntax')
+                    continue
+
+                except AssertionError as e:
+                    if "Invalid <prosody> tag" in str(e):
+                        print('Wrong ssml syntax: invalid prosody tag')
+                        continue
+                    raise e
+
+                self.outputer.write(audio)
+        except KeyboardInterrupt:
+            print('Exit by KeyboardInterrupt')
+            pass
 
         self.inputer.close()
         self.outputer.close()
