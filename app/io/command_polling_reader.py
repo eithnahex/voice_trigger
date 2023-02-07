@@ -1,5 +1,4 @@
 from collections import deque
-from dataclasses import dataclass
 from enum import Enum
 from typing import Callable, Generator, TypeAlias
 from app.io.io import Reader
@@ -53,7 +52,7 @@ class PollingCommandReader(Reader):
     def close(self) -> None:
         return super().close()
 
-    def read(self) -> Generator[None, None, tuple[str, Speaker | None]]:
+    def read(self) -> Generator[tuple[str, Speaker | None], None, None]:
 
         print('\nPrint exit or stop for exit')
         while True:
@@ -80,12 +79,14 @@ class PollingCommandReader(Reader):
                 if not Speaker.contains(input_speaker):
                     print('Wrong speaker')
                     continue
-                self.speaker = input_speaker
+                self.speaker = input_speaker # type: ignore
                 continue
 
             sample = f'<speak>{sample}</speak>'
             yield sample, self.speaker
+
             pass
+
         print('exit')
     pass
 

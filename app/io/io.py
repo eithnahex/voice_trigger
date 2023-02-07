@@ -3,7 +3,7 @@ from typing import Any, Generator
 
 from torch import Tensor
 
-from app.tts import Sample, SampleRate, Speaker
+from app.tts import SampleRate, Speaker
 
 
 class Reader(ABC):
@@ -16,7 +16,7 @@ class Reader(ABC):
         pass
 
     @abstractmethod
-    def read(self) -> Generator[None, None, tuple[Sample, Speaker | None]]:
+    def read(self) -> Generator[tuple[str, Speaker | None], None, None]:
         pass
     pass
 

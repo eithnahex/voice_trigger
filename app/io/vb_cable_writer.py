@@ -1,5 +1,4 @@
-from multiprocessing import Process
-import multiprocessing
+from multiprocessing import Process, Queue
 from typing import Any
 from numpy import ndarray
 import numpy
@@ -19,8 +18,8 @@ class VBCableWriter(Writer):
         self.device_name = 'CABLE Input'
         self.sample_rate = sample_rate
         self.device_info = self._get_device_info()
-        self.q_data = multiprocessing.Queue()
-        self.q_signals = multiprocessing.Queue()
+        self.q_data: Queue = Queue()
+        self.q_signals: Queue = Queue()
         self.processes: list[Process] = self._run_processes()
 
     def close(self) -> None:
@@ -32,7 +31,7 @@ class VBCableWriter(Writer):
         self.q_data.put(VBCableWriter.msg_close)
 
         for p in self.processes:
-            if p.is_alive:
+            if p.is_alive():
                 p.terminate()
 
         for p in self.processes:
@@ -84,12 +83,12 @@ class VBCableWriter(Writer):
 
     @staticmethod
     def _work(
-        q_data: multiprocessing.Queue,
-        q_signals: multiprocessing.Queue,
+        q_data: Queue,
+        q_signals: Queue,
         sample_rate: SampleRate,
         device_index: int | None = None,
         process_name: str = 'process'
-    ):
+    ) -> None:
         print(f'{process_name}: configure...')
         p = pyaudio.PyAudio()
 
