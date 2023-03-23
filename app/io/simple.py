@@ -1,5 +1,4 @@
 import contextlib
-from os import PathLike
 from pathlib import Path
 import time
 from typing import Any, Generator
@@ -18,7 +17,7 @@ class SimplePollingReader(Reader):
     def close(self) -> None:
         return super().close()
 
-    def read(self) -> Generator[None, None, tuple[str, Speaker | None]]:
+    def read(self) -> Generator[tuple[str, Speaker | None], Any, None]:
         speaker = Speaker.baya
 
         print('\nPrint exit or stop for exit')
@@ -34,7 +33,7 @@ class SimplePollingReader(Reader):
                 if not Speaker.contains(input_speaker):
                     print('Wrong speaker')
                     continue
-                speaker = input_speaker
+                speaker = input_speaker # type: ignore
                 continue
 
             sample = f"<speak>{i}</speak>"
@@ -46,7 +45,7 @@ class SimplePollingReader(Reader):
 
 class SimpleWavWriter(Writer):
 
-    def __init__(self, save_dir: PathLike = './polling_results/') -> None:
+    def __init__(self, save_dir: str = './polling_results/') -> None:
         super().__init__()
         self.save_dir = save_dir
         self.__create_dir_if_not_exists(self.save_dir)
@@ -70,7 +69,7 @@ class SimpleWavWriter(Writer):
             wf.writeframes(audio_wav)
         pass
 
-    def __create_dir_if_not_exists(self, path: PathLike):
+    def __create_dir_if_not_exists(self, path: str) -> None:
         if not (p := Path(path)).exists():
             p.mkdir()
     pass

@@ -1,9 +1,7 @@
-from abc import ABC, abstractmethod
 from enum import Enum
-from os import PathLike
 import os
 from pathlib import Path
-from typing import Any, Generator, TypeAlias
+from typing import TypeAlias
 from torch import Tensor
 import torch
 from torch.package.package_importer import PackageImporter
@@ -14,6 +12,14 @@ from app.typing.multi_acc_v3_package import TTSModelMultiAcc_v3
 class Device(str, Enum):
     CPU = 'cpu'
     GPU = 'cuda'
+
+    @staticmethod
+    def from_string(device: str) -> 'Device':
+        device = device.upper()
+        if device in Device.__members__.keys():
+            return Device.__members__[device]
+        else:
+            raise Exception(f"Unknown Device {device}")
 
 
 class Speaker(str, Enum):
@@ -41,7 +47,7 @@ class TTSConfig():
         default_speaker: Speaker,
         sample_rate: SampleRate = 48000,
         model_name: str = 'v3_1_ru.pt',
-        models_path: PathLike = '.',
+        models_path: str = '.',
         download_model_if_not_exists: bool = True,
         threads: int = 4,
         url_base_models_download: str = 'https://models.silero.ai/models/tts/ru/{}',
@@ -62,15 +68,15 @@ class TTSConfig():
         self._full_model_path = Path(
             f"{self.models_path}/{self.model_name}").resolve()
 
-    def download_model(self):
+    def download_model(self) -> None:
         if not os.path.isfile(self._full_model_path):
             torch.hub.download_url_to_file(
                 f"{self.url_base_models_download}/{self.model_name}", self.model_name
             )
         pass
 
-    def get_model_path(self) -> PathLike:
-        return self._full_model_path
+    def get_model_path(self) -> str:
+        return str(self._full_model_path)
 
     pass
 
@@ -90,7 +96,7 @@ class TTS():
         )
         return audio
 
-    def configure(self):
+    def configure(self) -> None:
         print('tts configure...')
         if self.config._jit_stuck_fix:
             # fix torch stuck bug
@@ -118,7 +124,7 @@ class TTS():
         model.to(self.config.device)
         return model
 
-    def _warmup(self):
+    def _warmup(self) -> None:
         print('model warmup...')
         self.model.apply_tts('с', speaker=self.config.default_speaker)
         pass

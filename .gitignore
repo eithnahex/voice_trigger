@@ -1,4 +1,9 @@
 
+*.wav
+*.mp3
+
+mypy.ini
+.vscode
 *.pt
 
 # Created by https://www.toptal.com/developers/gitignore/api/python,pycharm+all,venv,virtualenv
