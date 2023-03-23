@@ -15,11 +15,12 @@ class Device(str, Enum):
 
     @staticmethod
     def from_string(device: str) -> 'Device':
-        device = device.upper()
-        if device in Device.__members__.keys():
-            return Device.__members__[device]
-        else:
-            raise Exception(f"Unknown Device {device}")
+        device = device.lower()
+        if device == 'cpu':
+            return Device.CPU
+        if device == 'cuda':
+            return Device.GPU
+        raise Exception(f"Unknown Device {device}")
 
 
 class Speaker(str, Enum):
