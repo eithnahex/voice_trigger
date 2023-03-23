@@ -56,14 +56,16 @@ class VBCableWriter(Writer):
                 self.q_data,
                 self.q_signals,
                 self.sample_rate, None,
-                "default stream")
+                "default stream"),
+                daemon=True,
             ),
             Process(target=self._work, args=(
                 self.q_data,
                 self.q_signals,
                 self.sample_rate,
                 self.device_info.get('index'),
-                "vb_cable stream")
+                "vb_cable stream"),
+                daemon=True,
             ),
         ]
 
