@@ -1,3 +1,7 @@
+
+*.wav
+*.mp3
+
 mypy.ini
 .vscode
 *.pt
