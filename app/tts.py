@@ -13,6 +13,14 @@ class Device(str, Enum):
     CPU = 'cpu'
     GPU = 'cuda'
 
+    @staticmethod
+    def from_string(device: str) -> 'Device':
+        device = device.upper()
+        if device in Device.__members__.keys():
+            return Device.__members__[device]
+        else:
+            raise Exception(f"Unknown Device {device}")
+
 
 class Speaker(str, Enum):
     baya = 'baya'
