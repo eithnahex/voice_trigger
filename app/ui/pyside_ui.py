@@ -1,8 +1,9 @@
 from __future__ import annotations
+from dataclasses import dataclass
 from multiprocessing import Queue
 import time
 
-from typing import Any, Generator, Optional
+from typing import Any, Callable, Generator, Optional
 from PySide6 import QtCore, QtWidgets, QtGui, QtMultimedia
 import sys
 
@@ -13,6 +14,14 @@ from app.io.vb_cable_writer import VBCableWriter
 
 from app.tts import SampleRate, Speaker
 from app.io.io import Reader, Writer
+
+
+@dataclass
+class FormatText:
+    value: str
+
+    def format(self, *args: Any, **kwargs: Any) -> str:
+        return self.value.format(*args, **kwargs)
 
 
 class PysideReader(Reader):
@@ -40,7 +49,7 @@ class PysideReader(Reader):
 
 class PysideWriter(VBCableWriter):
     pass
-    
+
     # def configure(self, sample_rate: SampleRate) -> None:
     #     pass
 
@@ -127,7 +136,7 @@ class TTSTextPane(QtWidgets.QWidget):
     # add macros button
     # play menu buttons
 
-    def __init__(self, data: MacrosDataManager, q_output: Queue[str], parent) -> None:
+    def __init__(self, data: MacrosDataManager, q_output: OutputProxy, parent) -> None:
         super().__init__(parent)
         self.data = data
         self.q_output = q_output
@@ -199,7 +208,7 @@ class MacrosWidget(QtWidgets.QWidget):
 
 class MacrosDataManager:
 
-    def __init__(self, q_reader: Queue[str], elements: list[QtWidgets.QWidget] = None) -> None:
+    def __init__(self, q_reader: OutputProxy, elements: list[QtWidgets.QWidget] = None) -> None:
         self.q_reader = q_reader
         self.scroll_layout = None
         self.elements = elements or []
@@ -265,25 +274,75 @@ class MacrosDataManager:
         pass
 
 
+class GlobalProsodyWidget(QtWidgets.QWidget):
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+
+        default_globals = FormatText('<prosody rate="fast">{}</prosody>')
+
+        self.__line_edit = QtWidgets.QLineEdit(self)
+        self.__line_edit.setText(default_globals.value)
+
+        layout = QtWidgets.QHBoxLayout(self)
+        layout.addWidget(self.__line_edit)
+        self.setLayout(layout)
+
+    def get_text(self) -> FormatText:
+        return FormatText(self.__line_edit.text())
+
+    def add_change_cb(self, slot: QtCore.Slot | Callable) -> None:
+        self.__line_edit.textChanged.connect(slot)
+
+
+class OutputProxy:
+    def __init__(self, q_reader: Queue[str]) -> None:
+        self.q_reader = q_reader
+        self.__global_prosody_text: FormatText = FormatText('')
+
+    def put(self, data: str, block: bool = True, timeout: float | None = None) -> None:
+        print('proxy put')
+        sample = self.__global_prosody_text.format(data)
+        self.q_reader.put(sample, block, timeout)
+
+    def slot_prosody_changed(self, text: str) -> None:
+        self.__global_prosody_text = FormatText(text)
+
+    def set_default_global_prosody(self, global_prosody: FormatText) -> None:
+        self.__global_prosody_text = global_prosody
+
+
 class TTSUI(QtWidgets.QWidget):
 
     def __init__(self, q_reader: Queue[str]) -> None:
         super().__init__()
 
-        macros_manager = MacrosDataManager(q_reader)
+        self.output_proxy = OutputProxy(q_reader)
+
+        macros_manager = MacrosDataManager(self.output_proxy)
+
+        self.global_prosody = GlobalProsodyWidget(parent=self)
+        self.global_prosody.add_change_cb(
+            self.output_proxy.slot_prosody_changed
+        )
+        self.output_proxy.set_default_global_prosody(
+            self.global_prosody.get_text())
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.output_layout = QtWidgets.QHBoxLayout(self)
 
         self.macros_list_view = MacrosListView(macros_manager, parent=self)
-        self.left_pane = TTSTextPane(macros_manager, q_reader, self)
-        self.right_pane = TTSTextPane(macros_manager, q_reader, self)
+        self.left_pane = TTSTextPane(macros_manager, self.output_proxy, self)
+        self.right_pane = TTSTextPane(macros_manager, self.output_proxy, self)
 
         self.output_layout.addWidget(
             self.left_pane
         )
         self.output_layout.addWidget(
             self.right_pane
+        )
+
+        self.layout.addWidget(
+            self.global_prosody
         )
 
         self.layout.addWidget(
