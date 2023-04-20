@@ -56,7 +56,8 @@ class VBCableWriter(Writer):
             Process(target=self._work, args=(
                 self.q_data,
                 self.q_signals,
-                self.sample_rate, None,
+                self.sample_rate,
+                None,
                 "default stream"),
                 daemon=True,
             ),
