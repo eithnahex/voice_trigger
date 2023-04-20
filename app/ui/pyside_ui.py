@@ -22,10 +22,12 @@ class PysideReader(Reader):
         self.stop = False
 
     def configure(self) -> None:
+        print('PysideReader ready')
         pass
 
     def close(self) -> None:
         self.stop = True
+        print('PysideReader closed')
 
     def read(self) -> Generator[tuple[str, Speaker | None], None, None]:
         while True:
@@ -38,6 +40,7 @@ class PysideReader(Reader):
 
 class PysideWriter(VBCableWriter):
     pass
+    
     # def configure(self, sample_rate: SampleRate) -> None:
     #     pass
 

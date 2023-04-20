@@ -13,6 +13,7 @@ class TTSManager():
         self.inputer.configure()
         self.outputer.configure(self.tts.config.sample_rate)
         self.tts.configure()
+        print('All tts modules are ready')
 
         try:
             for sample, speaker in self.inputer.read():
