@@ -75,64 +75,25 @@ class PlayMenuButtons(QtWidgets.QWidget):
         super().__init__(parent)
 
         layout = QtWidgets.QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
         self.dual_play_btn = QtWidgets.QPushButton(
             text="Dual Play",
             parent=self
         )
+
         self.test_play_btn = QtWidgets.QPushButton(
             text="Test Play",
             parent=self
         )
-
-        # self.dual_play_btn.clicked.connect(self.dual_play_clicked)
-        # self.test_play_btn.clicked.connect(self.test_play_clicked)
 
         layout.addWidget(self.dual_play_btn)
         layout.addWidget(self.test_play_btn)
 
         self.setLayout(layout)
 
-    # def dual_play_clicked(self):
-    #     print('dual_play_clicked', self)
-
-    # def test_play_clicked(self):
-    #     print('test_play_clicked', self)
-
-
-class MacrosListView(QtWidgets.QWidget):
-    # list with tts text labels
-    # play menu buttons
-
-    def __init__(self, data: MacrosDataManager, parent: QtWidgets.QWidget | None = None) -> None:
-        super().__init__(parent)
-
-        self.data = data
-
-        layout = QtWidgets.QVBoxLayout()
-
-        self.scroll_area = QtWidgets.QScrollArea()
-        self.scroll_area.setWidgetResizable(True)
-        self.scroll_area.setLayoutDirection(
-            PySide6.QtCore.Qt.LayoutDirection.RightToLeft)
-
-        self.scroll_widget = QtWidgets.QWidget()
-        self.scroll_widget_layout = QtWidgets.QVBoxLayout()
-        self.scroll_widget_layout.setContentsMargins(0, 0, 0, 0)
-
-        self.scroll_widget.setLayout(self.scroll_widget_layout)
-
-        self.data.set_scroll_layout(self.scroll_widget_layout)
-
-        self.scroll_area.setWidget(self.scroll_widget)
-        self.scroll_area.setVerticalScrollBarPolicy(
-            PySide6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self.scroll_area.setHorizontalScrollBarPolicy(
-            PySide6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-
-        layout.addWidget(self.scroll_area)
-
-        self.setLayout(layout)
+        pass
 
 
 class TTSTextPane(QtWidgets.QWidget):
@@ -181,6 +142,41 @@ class TTSTextPane(QtWidgets.QWidget):
         pass
 
 
+class MacrosListView(QtWidgets.QWidget):
+    # list with tts text labels
+    # play menu buttons
+
+    def __init__(self, data: MacrosDataManager, parent: QtWidgets.QWidget | None = None) -> None:
+        super().__init__(parent)
+
+        self.data = data
+
+        layout = QtWidgets.QVBoxLayout()
+
+        self.scroll_area = QtWidgets.QScrollArea()
+        self.scroll_area.setWidgetResizable(True)
+        # self.scroll_area.setLayoutDirection(
+        #     PySide6.QtCore.Qt.LayoutDirection.RightToLeft)
+
+        self.scroll_widget = QtWidgets.QWidget()
+        self.scroll_widget_layout = QtWidgets.QVBoxLayout()
+        self.scroll_widget_layout.setAlignment(PySide6.QtCore.Qt.AlignTop)
+
+        self.scroll_widget.setLayout(self.scroll_widget_layout)
+
+        self.data.set_scroll_layout(self.scroll_widget_layout)
+
+        self.scroll_area.setWidget(self.scroll_widget)
+        self.scroll_area.setVerticalScrollBarPolicy(
+            PySide6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.scroll_area.setHorizontalScrollBarPolicy(
+            PySide6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        layout.addWidget(self.scroll_area)
+
+        self.setLayout(layout)
+
+
 class MacrosWidget(QtWidgets.QWidget):
 
     def __init__(self, manager: MacrosDataManager, text: str = '', parent: QtWidgets.QWidget | None = None) -> None:
@@ -189,17 +185,20 @@ class MacrosWidget(QtWidgets.QWidget):
 
         layout = QtWidgets.QHBoxLayout()
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
 
         self.line_edit = QtWidgets.QLineEdit()
+        self.line_edit.setContentsMargins(6, 0, 6, 0)
         self.line_edit.setText(text)
 
         self.remove_btn = QtWidgets.QPushButton(text='Remove')
+        self.remove_btn.setMaximumWidth(60)
         self.remove_btn.clicked.connect(self.remove_clicked)
 
         self.play_menu = PlayMenuButtons()
 
-        layout.addWidget(self.line_edit)
         layout.addWidget(self.remove_btn)
+        layout.addWidget(self.line_edit)
         layout.addWidget(self.play_menu)
 
         self.setLayout(layout)
