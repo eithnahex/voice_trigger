@@ -29,7 +29,13 @@ class TTSManager():
                     if "Invalid <prosody> tag" in str(e):
                         print('Wrong ssml syntax: invalid prosody tag')
                         continue
-                    raise e
+                    if "Empty <prosody> tag" in str(e):
+                        print("Wrong ssml syntax: empty <prosody> tag")
+                        continue
+                    print('Unknown error')
+                    print(e)
+                    continue
+                    # raise e
 
                 self.outputer.write(audio)
         except KeyboardInterrupt:
