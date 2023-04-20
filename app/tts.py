@@ -111,6 +111,8 @@ class TTS():
 
         if self.config.warmup:
             self._warmup()
+        
+        print('TTS ready')
 
     def _load_model(self) -> TTSModelMultiAcc_v3:
         importer: PackageImporter = torch.package.PackageImporter(

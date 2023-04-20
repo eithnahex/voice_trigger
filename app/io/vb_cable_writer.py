@@ -21,6 +21,7 @@ class VBCableWriter(Writer):
         self.q_data: Queue = Queue()
         self.q_signals: Queue = Queue()
         self.processes: list[Process] = self._run_processes()
+        print('VBCableWriter ready')
 
     def close(self) -> None:
         if not self.configured:
@@ -55,7 +56,8 @@ class VBCableWriter(Writer):
             Process(target=self._work, args=(
                 self.q_data,
                 self.q_signals,
-                self.sample_rate, None,
+                self.sample_rate,
+                None,
                 "default stream"),
                 daemon=True,
             ),
@@ -79,7 +81,7 @@ class VBCableWriter(Writer):
                 continue
             else:
                 raise Exception(
-                    f'Message error. Expected value: {VBCableWriter.msg_ready}. Iтcoming value: {msg}')
+                    f'Message error. Expected value: {VBCableWriter.msg_ready}. Incoming value: {msg}')
 
         return processes
 
