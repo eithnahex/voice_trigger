@@ -13,6 +13,7 @@ class TTSManager():
         self.inputer.configure()
         self.outputer.configure(self.tts.config.sample_rate)
         self.tts.configure()
+        print('All tts modules are ready')
 
         try:
             for sample, speaker in self.inputer.read():
@@ -28,7 +29,13 @@ class TTSManager():
                     if "Invalid <prosody> tag" in str(e):
                         print('Wrong ssml syntax: invalid prosody tag')
                         continue
-                    raise e
+                    if "Empty <prosody> tag" in str(e):
+                        print("Wrong ssml syntax: empty <prosody> tag")
+                        continue
+                    print('Unknown error')
+                    print(e)
+                    continue
+                    # raise e
 
                 self.outputer.write(audio)
         except KeyboardInterrupt:
