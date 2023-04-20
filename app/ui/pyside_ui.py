@@ -109,7 +109,9 @@ class TTSTextPane(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
         self.buttons_layout = QtWidgets.QHBoxLayout()
 
-        self.text_edit = QtWidgets.QPlainTextEdit()
+        self.text_edit = QtWidgets.QPlainTextEdit(self)
+        self.text_edit.installEventFilter(self)
+
         self.play_menu = PlayMenuButtons()
         self.add_macros_btn = QtWidgets.QPushButton(
             text="Add Macros",
@@ -140,6 +142,14 @@ class TTSTextPane(QtWidgets.QWidget):
         smaple = self.text_edit.toPlainText().strip()
         self.q_output.put(smaple)
         pass
+
+    def eventFilter(self, widget: QtCore.QObject, event: QtCore.QEvent) -> bool:
+        if widget == self.text_edit and event.type() == QtCore.QEvent.Type.KeyPress:
+            keyEvent = QtGui.QKeyEvent(event)  # type: ignore
+            if keyEvent.keyCombination() == QtCore.QKeyCombination(QtCore.Qt.KeyboardModifier.ControlModifier, QtCore.Qt.Key.Key_Return):
+                self.play_dual_clicked()
+
+        return False
 
 
 class MacrosListView(QtWidgets.QWidget):
@@ -337,8 +347,10 @@ class TTSUI(QtWidgets.QWidget):
         self.output_layout = QtWidgets.QHBoxLayout()
 
         self.macros_list_view = MacrosListView(macros_manager)
-        self.left_pane = TTSTextPane(macros_manager, self.output_proxy)
-        self.right_pane = TTSTextPane(macros_manager, self.output_proxy)
+        self.left_pane = TTSTextPane(
+            macros_manager, self.output_proxy, parent=self)
+        self.right_pane = TTSTextPane(
+            macros_manager, self.output_proxy, parent=self)
 
         self.output_layout.addWidget(
             self.left_pane
