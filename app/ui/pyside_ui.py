@@ -71,10 +71,10 @@ class PlayMenuButtons(QtWidgets.QWidget):
     # pause button
     # stop button
 
-    def __init__(self, parent=None) -> None:
+    def __init__(self, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
 
-        self.layout = QtWidgets.QHBoxLayout(self)
+        layout = QtWidgets.QHBoxLayout(self)
 
         self.dual_play_btn = QtWidgets.QPushButton(
             text="Dual Play",
@@ -88,8 +88,10 @@ class PlayMenuButtons(QtWidgets.QWidget):
         # self.dual_play_btn.clicked.connect(self.dual_play_clicked)
         # self.test_play_btn.clicked.connect(self.test_play_clicked)
 
-        self.layout.addWidget(self.dual_play_btn)
-        self.layout.addWidget(self.test_play_btn)
+        layout.addWidget(self.dual_play_btn)
+        layout.addWidget(self.test_play_btn)
+
+        self.setLayout(layout)
 
     # def dual_play_clicked(self):
     #     print('dual_play_clicked', self)
@@ -102,20 +104,20 @@ class MacrosListView(QtWidgets.QWidget):
     # list with tts text labels
     # play menu buttons
 
-    def __init__(self, data: MacrosDataManager, parent) -> None:
+    def __init__(self, data: MacrosDataManager, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
 
         self.data = data
 
-        self.layout = QtWidgets.QVBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout()
 
-        self.scroll_area = QtWidgets.QScrollArea(self)
+        self.scroll_area = QtWidgets.QScrollArea()
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setLayoutDirection(
             PySide6.QtCore.Qt.LayoutDirection.RightToLeft)
 
-        self.scroll_widget = QtWidgets.QWidget(self)
-        self.scroll_widget_layout = QtWidgets.QVBoxLayout(self)
+        self.scroll_widget = QtWidgets.QWidget()
+        self.scroll_widget_layout = QtWidgets.QVBoxLayout()
         self.scroll_widget_layout.setContentsMargins(0, 0, 0, 0)
 
         self.scroll_widget.setLayout(self.scroll_widget_layout)
@@ -128,7 +130,9 @@ class MacrosListView(QtWidgets.QWidget):
         self.scroll_area.setHorizontalScrollBarPolicy(
             PySide6.QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-        self.layout.addWidget(self.scroll_area)
+        layout.addWidget(self.scroll_area)
+
+        self.setLayout(layout)
 
 
 class TTSTextPane(QtWidgets.QWidget):
@@ -136,16 +140,16 @@ class TTSTextPane(QtWidgets.QWidget):
     # add macros button
     # play menu buttons
 
-    def __init__(self, data: MacrosDataManager, q_output: OutputProxy, parent) -> None:
+    def __init__(self, data: MacrosDataManager, q_output: OutputProxy, parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.data = data
         self.q_output = q_output
 
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.buttons_layout = QtWidgets.QHBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout()
+        self.buttons_layout = QtWidgets.QHBoxLayout()
 
-        self.text_edit = QtWidgets.QPlainTextEdit(self)
-        self.play_menu = PlayMenuButtons(self)
+        self.text_edit = QtWidgets.QPlainTextEdit()
+        self.play_menu = PlayMenuButtons()
         self.add_macros_btn = QtWidgets.QPushButton(
             text="Add Macros",
             parent=self
@@ -154,12 +158,13 @@ class TTSTextPane(QtWidgets.QWidget):
         self.buttons_layout.addWidget(self.add_macros_btn)
         self.buttons_layout.addWidget(self.play_menu)
 
-        self.layout.addWidget(self.text_edit)
-        self.layout.addLayout(self.buttons_layout)
+        layout.addWidget(self.text_edit)
+        layout.addLayout(self.buttons_layout)
 
         self.add_macros_btn.clicked.connect(self.add_macros_click)
         self.play_menu.dual_play_btn.clicked.connect(self.play_dual_clicked)
 
+        self.setLayout(layout)
         pass
 
     def add_macros_click(self):
@@ -178,25 +183,26 @@ class TTSTextPane(QtWidgets.QWidget):
 
 class MacrosWidget(QtWidgets.QWidget):
 
-    def __init__(self, manager: MacrosDataManager, text: str = '', parent=None) -> None:
+    def __init__(self, manager: MacrosDataManager, text: str = '', parent: QtWidgets.QWidget | None = None) -> None:
         super().__init__(parent)
         self.manager = manager
 
-        self.layout = QtWidgets.QHBoxLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.setLayout(self.layout)
+        layout = QtWidgets.QHBoxLayout()
+        layout.setContentsMargins(0, 0, 0, 0)
 
-        self.line_edit = QtWidgets.QLineEdit(self)
+        self.line_edit = QtWidgets.QLineEdit()
         self.line_edit.setText(text)
 
-        self.remove_btn = QtWidgets.QPushButton(text='Remove', parent=self)
+        self.remove_btn = QtWidgets.QPushButton(text='Remove')
         self.remove_btn.clicked.connect(self.remove_clicked)
 
-        self.play_menu = PlayMenuButtons(self)
+        self.play_menu = PlayMenuButtons()
 
-        self.layout.addWidget(self.line_edit)
-        self.layout.addWidget(self.remove_btn)
-        self.layout.addWidget(self.play_menu)
+        layout.addWidget(self.line_edit)
+        layout.addWidget(self.remove_btn)
+        layout.addWidget(self.play_menu)
+
+        self.setLayout(layout)
 
     def set_text(self, text: str):
         self.line_edit.setText(text)
@@ -208,7 +214,7 @@ class MacrosWidget(QtWidgets.QWidget):
 
 class MacrosDataManager:
 
-    def __init__(self, q_reader: OutputProxy, elements: list[QtWidgets.QWidget] = None) -> None:
+    def __init__(self, q_reader: OutputProxy, elements: list[QtWidgets.QWidget] | None = None) -> None:
         self.q_reader = q_reader
         self.scroll_layout = None
         self.elements = elements or []
@@ -248,7 +254,7 @@ class MacrosDataManager:
                 'The scroll_layout is null. Set one by set_scroll_layout'
             )
 
-    def remove_item_by_index(self, index: int):
+    def remove_item_by_index(self, index: int) -> None:
         if self.scroll_layout:
             w = self.elements[index]
             self.scroll_layout.removeWidget(w)
@@ -267,7 +273,7 @@ class MacrosDataManager:
             lambda: self.play_dual_clicked(w.line_edit.text()))
         return w
 
-    def play_dual_clicked(self, text: str):
+    def play_dual_clicked(self, text: str) -> None:
         print('play_dual_clicked')
         smaple = text.strip()
         self.q_reader.put(smaple)
@@ -320,19 +326,20 @@ class TTSUI(QtWidgets.QWidget):
 
         macros_manager = MacrosDataManager(self.output_proxy)
 
-        self.global_prosody = GlobalProsodyWidget(parent=self)
+        self.global_prosody = GlobalProsodyWidget()
         self.global_prosody.add_change_cb(
             self.output_proxy.slot_prosody_changed
         )
         self.output_proxy.set_default_global_prosody(
             self.global_prosody.get_text())
 
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.output_layout = QtWidgets.QHBoxLayout(self)
+        layout = QtWidgets.QVBoxLayout()
 
-        self.macros_list_view = MacrosListView(macros_manager, parent=self)
-        self.left_pane = TTSTextPane(macros_manager, self.output_proxy, self)
-        self.right_pane = TTSTextPane(macros_manager, self.output_proxy, self)
+        self.output_layout = QtWidgets.QHBoxLayout()
+
+        self.macros_list_view = MacrosListView(macros_manager)
+        self.left_pane = TTSTextPane(macros_manager, self.output_proxy)
+        self.right_pane = TTSTextPane(macros_manager, self.output_proxy)
 
         self.output_layout.addWidget(
             self.left_pane
@@ -341,14 +348,16 @@ class TTSUI(QtWidgets.QWidget):
             self.right_pane
         )
 
-        self.layout.addWidget(
+        layout.addWidget(
             self.global_prosody
         )
 
-        self.layout.addWidget(
+        layout.addWidget(
             self.macros_list_view
         )
-        self.layout.addLayout(self.output_layout)
+        layout.addLayout(self.output_layout)
+
+        self.setLayout(layout)
 
     pass
 
